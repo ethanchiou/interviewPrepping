@@ -21,8 +21,8 @@ export default function Timer({ startTime }: TimerProps) {
     const seconds = Math.floor((elapsed % 60000) / 1000);
 
     return (
-        <div className="text-2xl font-mono font-bold text-gray-700 dark:text-gray-300">
+        <span className="text-sm font-mono text-gray-600 dark:text-gray-300">
             {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
-        </div>
+        </span>
     );
 }

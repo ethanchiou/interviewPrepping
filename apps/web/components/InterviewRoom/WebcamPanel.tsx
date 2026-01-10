@@ -15,16 +15,16 @@ export default function WebcamPanel() {
                 setIsLoading(true);
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: true,
-                    audio: false, // We might want audio later, but for visual only right now
+                    audio: false,
                 });
 
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
                 }
-                setIsLoading(false);
             } catch (err) {
-                console.error("Error accessing webcam:", err);
+                console.error("Webcam access error:", err);
                 setError("Could not access camera. Please allow permissions.");
+            } finally {
                 setIsLoading(false);
             }
         };
@@ -39,10 +39,8 @@ export default function WebcamPanel() {
     }, []);
 
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-            
-
-            <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
+        <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex-1 relative flex items-center justify-center overflow-hidden bg-black">
                 {isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                         Loading camera...
@@ -50,8 +48,8 @@ export default function WebcamPanel() {
                 )}
 
                 {error ? (
-                    <div className="text-red-400 text-center p-4">
-                        <p>{error}</p>
+                    <div className="absolute inset-0 flex items-center justify-center text-red-400 p-4 text-center">
+                        {error}
                     </div>
                 ) : (
                     <video

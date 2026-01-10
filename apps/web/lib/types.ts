@@ -65,9 +65,10 @@ export interface CodeSnapshotPayload {
     };
 }
 
+// ⚡ Corrected RunResultPayload
 export interface RunResultPayload {
     passed: boolean;
-    results: TestResult[];
+    results: TestResult[]; // must exist
 }
 
 export interface TestResult {
