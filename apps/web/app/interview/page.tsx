@@ -86,8 +86,14 @@ export default function InterviewPage() {
                 });
             })
             .catch((err) => {
-                setError("WebSocket connection failed");
-                console.error(err);
+                console.error("Initial WebSocket connection failed:", err);
+                // Don't set error immediately - WebSocket will auto-retry
+                // Only show error if we can't connect after retries
+                setTimeout(() => {
+                    if (!wsRef.current?.isConnected()) {
+                        setError("Could not connect to interview server. Please refresh and try again.");
+                    }
+                }, 5000); // Wait 5 seconds for retry attempts
             });
 
         // Initialize STT

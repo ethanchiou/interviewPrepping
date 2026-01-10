@@ -25,6 +25,7 @@ export class WSClient {
     connect(): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
+                console.log(`🔌 Connecting to WebSocket: ${this.url}`);
                 this.ws = new WebSocket(this.url);
 
                 this.ws.onopen = () => {
@@ -36,6 +37,7 @@ export class WSClient {
                 this.ws.onmessage = (event) => {
                     try {
                         const message: WSMessage = JSON.parse(event.data);
+                        console.log("📨 Received:", message.type);
                         this.messageHandlers.forEach((handler) => handler(message));
                     } catch (error) {
                         console.error("Failed to parse WebSocket message:", error);
@@ -43,15 +45,33 @@ export class WSClient {
                 };
 
                 this.ws.onerror = (error) => {
-                    console.error("WebSocket error:", error);
-                    reject(error);
+                    console.error("WebSocket error occurred:", error);
+                    // Don't reject here - the connection might still succeed
+                    // The onclose handler will manage reconnection
                 };
 
-                this.ws.onclose = () => {
-                    console.log("WebSocket closed");
-                    this.attemptReconnect();
+                this.ws.onclose = (event) => {
+                    console.log(`WebSocket closed: code=${event.code}, reason=${event.reason}`);
+
+                    // If we never connected (resolve wasn't called), reject now
+                    if (this.reconnectAttempts === 0 && this.ws?.readyState !== WebSocket.OPEN) {
+                        reject(new Error(`Failed to connect: ${event.reason || 'Connection closed'}`));
+                    } else {
+                        this.attemptReconnect();
+                    }
                 };
+
+                // Add timeout for initial connection
+                setTimeout(() => {
+                    if (this.ws?.readyState !== WebSocket.OPEN) {
+                        console.error("WebSocket connection timeout");
+                        reject(new Error("Connection timeout"));
+                        this.ws?.close();
+                    }
+                }, 10000); // 10 second timeout
+
             } catch (error) {
+                console.error("WebSocket connection error:", error);
                 reject(error);
             }
         });
@@ -85,6 +105,10 @@ export class WSClient {
 
     onMessage(handler: MessageHandler) {
         this.messageHandlers.push(handler);
+    }
+
+    isConnected(): boolean {
+        return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
     }
 
     close() {
