@@ -4,7 +4,6 @@
 - Docker & Docker Compose
 - Python 3.11+
 - Node.js 18+
-- OpenRouter API key (get free tier at https://openrouter.ai)
 
 ## Setup Commands
 

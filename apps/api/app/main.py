@@ -12,6 +12,12 @@ app = FastAPI(
     description="Backend for AI-powered technical interview simulator"
 )
 
+
+@app.get("/")
+async def root():
+    """Root endpoint."""
+    return {"message": "Welcome to Interview Simulator API", "docs": "/docs"}
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
