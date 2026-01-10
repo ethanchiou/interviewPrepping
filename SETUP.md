@@ -51,7 +51,7 @@ API docs: http://localhost:8000/docs
 ### 3. Frontend Setup (New Terminal)
 
 ```bash
-cd /Users/ethanchiou/Desktop/Programming/Projects/interviewPrepping/apps/web
+cd /apps/web
 
 # Install dependencies
 npm install
