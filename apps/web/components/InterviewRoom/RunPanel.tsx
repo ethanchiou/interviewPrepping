@@ -48,14 +48,6 @@ export default function RunPanel({ code, tests, onResult }: RunPanelProps) {
         }
     };
 
-    const handleStop = () => {
-        if (workerRef.current) {
-            workerRef.current.terminate();
-            workerRef.current = null;
-            setRunning(false);
-            setError("Execution stopped by user");
-        }
-    };
 
     return (
         <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
@@ -66,14 +58,6 @@ export default function RunPanel({ code, tests, onResult }: RunPanelProps) {
                     className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
                 >
                     {running ? "⏳ Running..." : "▶ Run"}
-                </button>
-
-                <button
-                    onClick={handleStop}
-                    disabled={!running}
-                    className="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
-                >
-                    ⏹ Stop
                 </button>
 
                 {error && (
