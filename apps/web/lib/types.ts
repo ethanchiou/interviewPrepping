@@ -7,6 +7,7 @@ export interface Question {
     title: string;
     difficulty: string;
     company_mode: string;
+    data_structure: string;
     prompt: string;
     starter_code: string | null;
     sample_tests: SampleTest[];
@@ -24,6 +25,7 @@ export interface QuestionPickResponse {
 export interface SessionCreateRequest {
     question_id: string;
     company_mode: string;
+    data_structure: string;
     difficulty: string;
 }
 
