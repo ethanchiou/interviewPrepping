@@ -1,4 +1,4 @@
-"""Utility functions for ID generation."""
+"""ID generation utilities."""
 import uuid
 
 

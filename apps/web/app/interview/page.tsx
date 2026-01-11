@@ -77,13 +77,52 @@ export default function InterviewPage() {
 
         ws.onMessage(handleWSMessage);
 
+        // Initialize STT FIRST (but don't start yet)
+        const stt = new STTClient((text, isFinal) => {
+            if (isFinal) {
+                setCurrentPartial("");
+                setTranscriptEntries((prev) => [
+                    ...prev,
+                    { text, timestamp: Date.now(), is_final: true },
+                ]);
+                // Check if WebSocket is connected before sending
+                if (ws.isConnected()) {
+                    console.log("📤 Sending TRANSCRIPT_FINAL:", text);
+                    ws.send("TRANSCRIPT_FINAL", { text, is_final: true });
+                } else {
+                    console.error("❌ WebSocket not connected, cannot send transcript");
+                }
+            } else {
+                setCurrentPartial(text);
+                // Check if WebSocket is connected before sending
+                if (ws.isConnected()) {
+                    ws.send("TRANSCRIPT_PARTIAL", { text, is_final: false });
+                }
+            }
+        });
+
+        sttRef.current = stt;
+
+        if (!stt.isAvailable()) {
+            setSTTAvailable(false);
+        }
+
+        // Connect WebSocket and start STT only after connection succeeds
         ws.connect()
             .then(() => {
+                console.log("✅ WebSocket connected successfully");
+                
                 // Send CLIENT_READY
                 ws.send("CLIENT_READY", {
                     client_version: "0.1",
                     ui_lang: "en",
                 });
+                
+                // Start STT only after WebSocket is connected
+                if (stt.isAvailable()) {
+                    stt.start();
+                    console.log("✅ Speech recognition started");
+                }
             })
             .catch((err) => {
                 console.error("Initial WebSocket connection failed:", err);
@@ -95,29 +134,6 @@ export default function InterviewPage() {
                     }
                 }, 5000); // Wait 5 seconds for retry attempts
             });
-
-        // Initialize STT
-        const stt = new STTClient((text, isFinal) => {
-            if (isFinal) {
-                setCurrentPartial("");
-                setTranscriptEntries((prev) => [
-                    ...prev,
-                    { text, timestamp: Date.now(), is_final: true },
-                ]);
-                ws.send("TRANSCRIPT_FINAL", { text, is_final: true });
-            } else {
-                setCurrentPartial(text);
-                ws.send("TRANSCRIPT_PARTIAL", { text, is_final: false });
-            }
-        });
-
-        sttRef.current = stt;
-
-        if (stt.isAvailable()) {
-            stt.start();
-        } else {
-            setSTTAvailable(false);
-        }
 
         return () => {
             ws.close();

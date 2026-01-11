@@ -19,7 +19,8 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.cors_origins.split(",")]
     
     class Config:
-        env_file = ".env"
+        # Check for .env.local first, then fall back to .env
+        env_file = ".env.local" if os.path.exists(".env.local") else ".env"
         case_sensitive = False
         extra = "ignore"
 

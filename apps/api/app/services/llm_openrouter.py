@@ -1,32 +1,33 @@
-"""OpenRouter LLM streaming service."""
+"""OpenRouter LLM service for streaming and non-streaming completions."""
 import httpx
-import json
-from typing import AsyncIterator, Optional
+from typing import AsyncGenerator
 from ..config import settings
 
 
 class OpenRouterService:
-    """Service for calling OpenRouter streaming API."""
+    """Service for interacting with OpenRouter API (Gemini)."""
     
     def __init__(self):
-        self.api_url = "https://openrouter.ai/api/v1/chat/completions"
         self.api_key = settings.openrouter_api_key
         self.model = settings.openrouter_model
-    
+        self.base_url = "https://openrouter.ai/api/v1"
+        
     async def stream_completion(
         self,
         system_prompt: str,
         user_prompt: str,
         temperature: float = 0.7
-    ) -> AsyncIterator[str]:
+    ) -> AsyncGenerator[str, None]:
         """
-        Stream completion from OpenRouter.
+        Stream completion from OpenRouter (Gemini).
         
-        Yields individual delta strings from the response.
+        Yields text deltas as they arrive.
         """
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:3000",  # Optional but recommended
+            "X-Title": "Interview Simulator"  # Optional but recommended
         }
         
         payload = {
@@ -40,26 +41,31 @@ class OpenRouterService:
         }
         
         async with httpx.AsyncClient(timeout=60.0) as client:
-            async with client.stream("POST", self.api_url, headers=headers, json=payload) as response:
+            async with client.stream(
+                "POST",
+                f"{self.base_url}/chat/completions",
+                headers=headers,
+                json=payload
+            ) as response:
                 response.raise_for_status()
                 
                 async for line in response.aiter_lines():
-                    if not line or line.strip() == "":
-                        continue
-                    
                     if line.startswith("data: "):
-                        data_str = line[6:]  # Remove "data: " prefix
+                        data = line[6:]  # Remove "data: " prefix
                         
-                        if data_str == "[DONE]":
+                        if data == "[DONE]":
                             break
                         
                         try:
-                            data = json.loads(data_str)
-                            delta = data.get("choices", [{}])[0].get("delta", {})
-                            content = delta.get("content", "")
+                            import json
+                            chunk = json.loads(data)
                             
-                            if content:
-                                yield content
+                            if "choices" in chunk and len(chunk["choices"]) > 0:
+                                delta = chunk["choices"][0].get("delta", {})
+                                content = delta.get("content", "")
+                                
+                                if content:
+                                    yield content
                         except json.JSONDecodeError:
                             continue
     
@@ -70,14 +76,42 @@ class OpenRouterService:
         temperature: float = 0.7
     ) -> str:
         """
-        Get full completion (non-streaming) from OpenRouter.
-        Used for coach responses that need JSON validation.
+        Get a non-streaming completion from OpenRouter (Gemini).
+        
+        Returns the complete response text.
         """
-        full_response = ""
-        async for chunk in self.stream_completion(system_prompt, user_prompt, temperature):
-            full_response += chunk
-        return full_response
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:3000",
+            "X-Title": "Interview Simulator"
+        }
+        
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": temperature,
+            "stream": False
+        }
+        
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"{self.base_url}/chat/completions",
+                headers=headers,
+                json=payload
+            )
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            if "choices" in data and len(data["choices"]) > 0:
+                return data["choices"][0]["message"]["content"]
+            
+            raise ValueError("No completion returned from OpenRouter")
 
 
-# Singleton instance
+# Global singleton instance
 openrouter = OpenRouterService()

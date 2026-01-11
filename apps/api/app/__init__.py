@@ -1,0 +1,1 @@
+"""Interview Simulator API application."""
