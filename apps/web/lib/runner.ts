@@ -12,7 +12,7 @@ export interface RunnerResult extends RunResultPayload {
 export async function runTests(
     code: string,
     tests: SampleTest[],
-    timeout: number = 800,
+    timeout: number = 180000, // 3 minutes
     onWorkerReady?: (worker: Worker) => void
 ): Promise<RunnerResult> {
     console.log("🚀 runTests called with:", { codeLength: code.length, testCount: tests.length, timeout });

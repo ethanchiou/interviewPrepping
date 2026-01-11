@@ -21,7 +21,7 @@ export default function RunPanel({ code, tests, onResult }: RunPanelProps) {
         console.log("🏃 Running tests...");
         console.log("Code:", code);
         console.log("Tests:", tests);
-        
+
         setRunning(true);
         setError("");
         setResult(null);
@@ -30,7 +30,7 @@ export default function RunPanel({ code, tests, onResult }: RunPanelProps) {
             const testResult = await runTests(
                 code,
                 tests,
-                800,
+                180000, // 3 minutes
                 (worker) => {
                     workerRef.current = worker;
                 }
@@ -68,11 +68,10 @@ export default function RunPanel({ code, tests, onResult }: RunPanelProps) {
 
                 {result && (
                     <div
-                        className={`px-4 py-2 rounded-lg font-semibold ${
-                            result.passed
+                        className={`px-4 py-2 rounded-lg font-semibold ${result.passed
                                 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                                 : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
+                            }`}
                     >
                         {result.passed ? "✓ All tests passed" : "✗ Some tests failed"}
                     </div>
@@ -88,11 +87,10 @@ export default function RunPanel({ code, tests, onResult }: RunPanelProps) {
                     {result.results.map((test, idx) => (
                         <div
                             key={idx}
-                            className={`p-3 rounded-lg text-xs border-2 ${
-                                test.pass
+                            className={`p-3 rounded-lg text-xs border-2 ${test.pass
                                     ? "bg-green-50 border-green-300 dark:bg-green-900 dark:border-green-700"
                                     : "bg-red-50 border-red-300 dark:bg-red-900 dark:border-red-700"
-                            }`}
+                                }`}
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="font-bold">
