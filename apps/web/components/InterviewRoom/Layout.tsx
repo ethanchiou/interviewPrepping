@@ -59,7 +59,7 @@ export default function Layout({
     return (
         <div className="h-screen flex flex-col" style={divStyle}>
             {/* Main content area */}
-            <div className="flex-1 flex overflow-hidden" style={divStyle}>
+            <div className="flex-1 flex overflow-hidden p-2" style={divStyle}>
                 {/* Left Column (50%) */}
                 <div className="w-2/5 h-full flex flex-col border-r border-gray-200 dark:border-gray-700" style={divStyle}>
                     {/* Top-Left: Webcam */}

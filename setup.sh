@@ -31,16 +31,16 @@ source venv/bin/activate
 echo "   Installing dependencies..."
 pip install -r requirements.txt
 
-if [ ! -f ".env.local" ]; then
-    echo "   Creating .env.local file..."
-    cat > .env.local << 'EOF'
+if [ ! -f ".env" ]; then
+    echo "   Creating .env file..."
+    cat > .env << 'EOF'
 OPENROUTER_API_KEY=your_api_key_here
 OPENROUTER_MODEL=google/gemini-2.0-flash-exp:free
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/interview_sim
-REDIS_URL=redis://localhost:6379
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/interview_sim
+REDIS_URL=redis://localhost:6379/0
 CORS_ORIGINS=http://localhost:3000
 EOF
-    echo "⚠️  Please edit apps/api/.env.local to add your OPENROUTER_API_KEY"
+    echo "⚠️  Please edit apps/api/.env to add your OPENROUTER_API_KEY"
 fi
 
 echo "   Seeding database..."

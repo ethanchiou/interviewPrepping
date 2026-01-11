@@ -23,12 +23,16 @@ We have provided setup scripts that automate the entire installation and startup
 
 #### Mac/Linux
 
+Run from the project root directory:
+
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
 
 #### Windows (PowerShell)
+
+Run from the project root directory:
 
 ```powershell
 .\setup.ps1
