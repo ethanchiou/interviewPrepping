@@ -29,9 +29,10 @@ export default function TranscriptPanel({
 }: TranscriptPanelProps) {
     const [showAnalysis, setShowAnalysis] = useState(false);
     const [displayedFeedback, setDisplayedFeedback] = useState("");
+    const [communicationScore, setCommunicationScore] = useState<number>(0);
     const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const fullFeedback = "Great job! Your communication was clear and effective. To further improve, try explaining your thought process a bit more as you work through the problem. This helps the interviewer understand your reasoning and problem-solving approach.";
+    const fullFeedback = "Try to speak more clearly and look at the camera more to improve your communication.";
 
     useEffect(() => {
         // Reset displayed feedback when analysis is shown
@@ -88,6 +89,9 @@ export default function TranscriptPanel({
                     <button
                         onClick={() => {
                             onRequestAnalysis();
+                            // Generate random score between 5 and 7
+                            const randomScore = Math.floor(Math.random() * 3) + 5; // 5, 6, or 7
+                            setCommunicationScore(randomScore);
                             setShowAnalysis(true);
                         }}
                         className="text-s px-5 py-2 mr-3 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
@@ -117,8 +121,8 @@ export default function TranscriptPanel({
                         <div className="mb-3">
                             <div className="bg-white dark:bg-gray-800 p-4 rounded-lg text-center">
                                 <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Communication Score</div>
-                                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                                    9/10
+                                <div className={`text-3xl font-bold ${getScoreColor(communicationScore)}`}>
+                                    {communicationScore}/10
                                 </div>
                             </div>
                         </div>
