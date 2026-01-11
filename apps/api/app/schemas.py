@@ -18,6 +18,7 @@ class QuestionOut(BaseModel):
     title: str
     difficulty: str
     company_mode: str
+    data_structure: str
     prompt: str
     starter_code: Optional[str]
     sample_tests: List[SampleTest]
@@ -37,12 +38,14 @@ class SessionCreate(BaseModel):
     question_id: UUID
     company_mode: str
     difficulty: str
+    data_structure: str = "Random"
 
 
 class SessionCreateResponse(BaseModel):
     """Create session response."""
     session_id: UUID
     ws_token: str = "dev"
+    question: QuestionOut  # Include question in response
 
 
 class SessionEndResponse(BaseModel):

@@ -1,28 +1,33 @@
-"""Application configuration from environment variables."""
-import os
-from typing import List
+"""Application configuration."""
 from pydantic_settings import BaseSettings
+from typing import List
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment."""
+    """Application settings."""
     
-    openrouter_api_key: str
+    # Database - lowercase to match usage in db.py
+    database_url: str = "postgresql://postgres:postgres@localhost:5432/interview_db"
+    
+    # Redis - lowercase to match usage
+    redis_url: str = "redis://localhost:6379/0"
+    
+    # LLM API
+    openrouter_api_key: str = ""
     openrouter_model: str = "google/gemini-2.0-flash-exp:free"
-    database_url: str
-    redis_url: str
+    
+    # CORS
     cors_origins: str = "http://localhost:3000"
     
     @property
     def cors_origins_list(self) -> List[str]:
-        """Parse CORS origins into list."""
+        """Convert cors_origins string to list."""
         return [origin.strip() for origin in self.cors_origins.split(",")]
     
     class Config:
-        # Check for .env.local first, then fall back to .env
-        env_file = ".env.local" if os.path.exists(".env.local") else ".env"
-        case_sensitive = False
-        extra = "ignore"
+        env_file = ".env"
+        extra = "allow"  # Allow extra fields from .env
+        case_sensitive = False  # Allow case-insensitive field matching
 
 
 settings = Settings()
