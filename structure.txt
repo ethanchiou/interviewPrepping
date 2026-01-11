@@ -1,0 +1,25 @@
+.
+├── README.md
+├── apps
+│   ├── api
+│   │   ├── app
+│   │   ├── requirements.txt
+│   │   └── venv
+│   └── web
+│       ├── app
+│       ├── components
+│       ├── lib
+│       ├── next-env.d.ts
+│       ├── next.config.js
+│       ├── package-lock.json
+│       ├── package.json
+│       ├── postcss.config.js
+│       ├── public
+│       ├── tailwind.config.ts
+│       └── tsconfig.json
+├── docker-compose.yml
+├── setup.ps1
+├── setup.sh
+└── structure.txt
+
+10 directories, 13 files
