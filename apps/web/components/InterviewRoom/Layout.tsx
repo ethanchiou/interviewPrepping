@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import InterviewerPanel from "./InterviewerPanel";
 import WebcamPanel from "./WebcamPanel";
 import EditorPanel from "./EditorPanel";
@@ -12,6 +12,15 @@ import {
     Question,
     RunResultPayload,
 } from "@/lib/types";
+
+// MediaPipe metrics interface
+interface MediaPipeMetrics {
+    eyeContact: boolean;
+    leftEyeOpen: boolean;
+    rightEyeOpen: boolean;
+    headTiltAngle: number;
+    faceDetected: boolean;
+}
 
 interface LayoutProps {
     question: Question;
@@ -43,30 +52,34 @@ export default function Layout({
         overflow: "hidden",
         margin: "3px",
     };
+
+    // MediaPipe state
+    const [mediapipeMetrics, setMediapipeMetrics] = useState<MediaPipeMetrics | null>(null);
+
     return (
         <div className="h-screen flex flex-col" style={divStyle}>
             {/* Main content area */}
             <div className="flex-1 flex overflow-hidden" style={divStyle}>
                 {/* Left Column (50%) */}
                 <div className="w-2/5 h-full flex flex-col border-r border-gray-200 dark:border-gray-700" style={divStyle}>
-                    {/* Top-Left: Interviewer (50%) */}
+                    {/* Top-Left: Webcam */}
                     <div className="flex-1 min-h-0 border-t border-gray-200 dark:border-gray-700" style={divStyle}>
-                        {/* Replaced CoachPanel with WebcamPanel */}
-                        <WebcamPanel />
+                        <WebcamPanel onMetricsUpdate={setMediapipeMetrics} />
                     </div>
 
-                    {/* Bottom-Left: Webcam (50%) */}
+                    {/* Bottom-Left: Interviewer */}
                     <div className="flex-1 min-h-0" style={divStyle}>
                         <InterviewerPanel
                             messages={interviewerMessages}
                             startTime={startTime}
+                            metrics={mediapipeMetrics}
                         />
                     </div>
                 </div>
 
                 {/* Right Column (50%) */}
                 <div className="w-3/5 h-full flex flex-col" style={divStyle}>
-                    {/* Top-Right: Editor (66% -> Flex-[2]) */}
+                    {/* Top-Right: Editor (66%) */}
                     <div className="flex-[2] min-h-0" style={divStyle}>
                         <EditorPanel
                             question={question}
@@ -76,7 +89,7 @@ export default function Layout({
                         />
                     </div>
 
-                    {/* Bottom-Right: Transcript (33% -> Flex-[1]) */}
+                    {/* Bottom-Right: Transcript (33%) */}
                     <div className="flex-[1] min-h-0 border-t border-gray-200 dark:border-gray-700" style={divStyle}>
                         <TranscriptPanel
                             entries={transcriptEntries}
