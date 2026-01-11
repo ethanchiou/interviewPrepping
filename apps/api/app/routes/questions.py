@@ -1,62 +1,70 @@
-"""Questions API endpoints."""
-from fastapi import APIRouter, Depends, HTTPException, Query
+"""Question management endpoints"""
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from typing import Optional
+import random
 from ..db import get_db
 from ..models import Question
-from ..schemas import QuestionPickResponse, QuestionOut, SampleTest
+from ..schemas import QuestionOut, QuestionPickResponse
 
-router = APIRouter()
+router = APIRouter(prefix="/questions")
 
 
-@router.get("/questions/pick", response_model=QuestionPickResponse)
+@router.get("/pick", response_model=QuestionPickResponse)
 async def pick_question(
-    company_mode: str = Query(default="General"),
-    difficulty: str = Query(default="Medium"),
+    company_mode: str = "General",
+    difficulty: str = "Medium",
     db: Session = Depends(get_db)
 ):
     """
-    Pick a random question based on company_mode and difficulty.
-    
-    If company_mode is "General", picks from any company_mode with matching difficulty.
-    Otherwise, picks from specific company_mode + difficulty.
-    Falls back to General if no match found.
+    Pick a random question based on filters
     """
-    # Try to find matching question
-    query = db.query(Question).filter(Question.difficulty == difficulty)
+    query = db.query(Question)
     
     if company_mode != "General":
-        # Try specific company mode first
-        question = query.filter(Question.company_mode == company_mode).order_by(func.random()).first()
-        
-        if not question:
-            # Fallback to General with same difficulty
-            question = db.query(Question).filter(
-                Question.company_mode == "General",
-                Question.difficulty == difficulty
-            ).order_by(func.random()).first()
-    else:
-        # General mode: pick any question with matching difficulty
-        question = query.order_by(func.random()).first()
+        query = query.filter(Question.company_mode == company_mode)
+    
+    if difficulty:
+        query = query.filter(Question.difficulty == difficulty)
+    
+    questions = query.all()
+    
+    if not questions:
+        raise HTTPException(status_code=404, detail="No questions found matching criteria")
+    
+    # Pick random question
+    question = random.choice(questions)
+    
+    return QuestionPickResponse(question=QuestionOut.model_validate(question))
+
+
+@router.get("/{question_id}", response_model=QuestionOut)
+async def get_question(question_id: str, db: Session = Depends(get_db)):
+    """Get a specific question by ID"""
+    question = db.query(Question).filter(Question.id == question_id).first()
     
     if not question:
-        # Ultimate fallback: any General question
-        question = db.query(Question).filter(
-            Question.company_mode == "General"
-        ).order_by(func.random()).first()
+        raise HTTPException(status_code=404, detail="Question not found")
     
-    if not question:
-        raise HTTPException(status_code=404, detail="No questions available")
+    return QuestionOut.model_validate(question)
+
+
+@router.get("/", response_model=list[QuestionOut])
+async def list_questions(
+    company_mode: Optional[str] = None,
+    difficulty: Optional[str] = None,
+    limit: int = 50,
+    db: Session = Depends(get_db)
+):
+    """List questions with optional filters"""
+    query = db.query(Question)
     
-    # Convert to response format
-    question_out = QuestionOut(
-        id=question.id,
-        title=question.title,
-        difficulty=question.difficulty,
-        company_mode=question.company_mode,
-        prompt=question.prompt,
-        starter_code=question.starter_code,
-        sample_tests=[SampleTest(**test) for test in question.sample_tests]
-    )
+    if company_mode:
+        query = query.filter(Question.company_mode == company_mode)
     
-    return QuestionPickResponse(question=question_out)
+    if difficulty:
+        query = query.filter(Question.difficulty == difficulty)
+    
+    questions = query.limit(limit).all()
+    
+    return [QuestionOut.model_validate(q) for q in questions]

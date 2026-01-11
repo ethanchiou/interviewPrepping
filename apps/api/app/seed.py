@@ -1,97 +1,257 @@
-"""Database seeding script."""
-import sys
-import random
+"""
+Seed database with sample interview questions
+Run with: python -m app.seed
+"""
+
 from sqlalchemy.orm import Session
-from app.db import SessionLocal, init_db
-from app.models import Question
+from .db import SessionLocal, init_db
+from .models import Question
+import uuid
+
+# Sample interview questions
+SAMPLE_QUESTIONS = [
+    {
+        "title": "Two Sum",
+        "difficulty": "Easy",
+        "company_mode": "General",
+        "prompt": """Given an array of integers nums and an integer target, return indices of the two numbers that add up to target.
+
+You may assume that each input would have exactly one solution, and you may not use the same element twice.
+
+Example:
+Input: nums = [2,7,11,15], target = 9
+Output: [0,1]
+Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].""",
+        "starter_code": """function twoSum(nums, target) {
+    // Your code here
+    
+}""",
+        "sample_tests": [
+            {"input": "[[2,7,11,15], 9]", "expected": "[0,1]"},
+            {"input": "[[3,2,4], 6]", "expected": "[1,2]"},
+            {"input": "[[3,3], 6]", "expected": "[0,1]"},
+        ],
+    },
+    {
+        "title": "Reverse String",
+        "difficulty": "Easy",
+        "company_mode": "General",
+        "prompt": """Write a function that reverses a string. The input string is given as an array of characters.
+
+You must do this by modifying the input array in-place with O(1) extra memory.
+
+Example:
+Input: s = ["h","e","l","l","o"]
+Output: ["o","l","l","e","h"]""",
+        "starter_code": """function reverseString(s) {
+    // Your code here
+    
+}""",
+        "sample_tests": [
+            {"input": '[["h","e","l","l","o"]]', "expected": '["o","l","l","e","h"]'},
+            {"input": '[["H","a","n","n","a","h"]]', "expected": '["h","a","n","n","a","H"]'},
+        ],
+    },
+    {
+        "title": "Valid Palindrome",
+        "difficulty": "Easy",
+        "company_mode": "General",
+        "prompt": """A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward.
+
+Given a string s, return true if it is a palindrome, or false otherwise.
+
+Example 1:
+Input: s = "A man, a plan, a canal: Panama"
+Output: true
+Explanation: "amanaplanacanalpanama" is a palindrome.
+
+Example 2:
+Input: s = "race a car"
+Output: false""",
+        "starter_code": """function isPalindrome(s) {
+    // Your code here
+    
+}""",
+        "sample_tests": [
+            {"input": '["A man, a plan, a canal: Panama"]', "expected": "true"},
+            {"input": '["race a car"]', "expected": "false"},
+            {"input": '[" "]', "expected": "true"},
+        ],
+    },
+    {
+        "title": "Merge Two Sorted Lists",
+        "difficulty": "Medium",
+        "company_mode": "General",
+        "prompt": """You are given the heads of two sorted linked lists list1 and list2.
+
+Merge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists.
+
+Return the head of the merged linked list.
+
+For this problem, represent the linked list as an array.
+
+Example:
+Input: list1 = [1,2,4], list2 = [1,3,4]
+Output: [1,1,2,3,4,4]""",
+        "starter_code": """function mergeTwoLists(list1, list2) {
+    // Your code here
+    // Treat as arrays and return merged sorted array
+    
+}""",
+        "sample_tests": [
+            {"input": "[[1,2,4], [1,3,4]]", "expected": "[1,1,2,3,4,4]"},
+            {"input": "[[], []]", "expected": "[]"},
+            {"input": "[[], [0]]", "expected": "[0]"},
+        ],
+    },
+    {
+        "title": "Best Time to Buy and Sell Stock",
+        "difficulty": "Easy",
+        "company_mode": "General",
+        "prompt": """You are given an array prices where prices[i] is the price of a given stock on the ith day.
+
+You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.
+
+Return the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return 0.
+
+Example:
+Input: prices = [7,1,5,3,6,4]
+Output: 5
+Explanation: Buy on day 2 (price = 1) and sell on day 5 (price = 6), profit = 6-1 = 5.""",
+        "starter_code": """function maxProfit(prices) {
+    // Your code here
+    
+}""",
+        "sample_tests": [
+            {"input": "[[7,1,5,3,6,4]]", "expected": "5"},
+            {"input": "[[7,6,4,3,1]]", "expected": "0"},
+        ],
+    },
+    {
+        "title": "FizzBuzz",
+        "difficulty": "Easy",
+        "company_mode": "General",
+        "prompt": """Given an integer n, return a string array answer (1-indexed) where:
+
+- answer[i] == "FizzBuzz" if i is divisible by 3 and 5.
+- answer[i] == "Fizz" if i is divisible by 3.
+- answer[i] == "Buzz" if i is divisible by 5.
+- answer[i] == i (as a string) if none of the above conditions are true.
+
+Example:
+Input: n = 5
+Output: ["1","2","Fizz","4","Buzz"]""",
+        "starter_code": """function fizzBuzz(n) {
+    // Your code here
+    
+}""",
+        "sample_tests": [
+            {"input": "[3]", "expected": '["1","2","Fizz"]'},
+            {"input": "[5]", "expected": '["1","2","Fizz","4","Buzz"]'},
+            {"input": "[15]", "expected": '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]'},
+        ],
+    },
+    {
+        "title": "Valid Parentheses",
+        "difficulty": "Medium",
+        "company_mode": "General",
+        "prompt": """Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.
+
+An input string is valid if:
+1. Open brackets must be closed by the same type of brackets.
+2. Open brackets must be closed in the correct order.
+3. Every close bracket has a corresponding open bracket of the same type.
+
+Example:
+Input: s = "()"
+Output: true
+
+Input: s = "()[]{}"
+Output: true
+
+Input: s = "(]"
+Output: false""",
+        "starter_code": """function isValid(s) {
+    // Your code here
+    
+}""",
+        "sample_tests": [
+            {"input": '["()"]', "expected": "true"},
+            {"input": '["()[]{}"]', "expected": "true"},
+            {"input": '["(]"]', "expected": "false"},
+            {"input": '["([)]"]', "expected": "false"},
+        ],
+    },
+    {
+        "title": "Maximum Subarray",
+        "difficulty": "Medium",
+        "company_mode": "General",
+        "prompt": """Given an integer array nums, find the subarray with the largest sum, and return its sum.
+
+Example 1:
+Input: nums = [-2,1,-3,4,-1,2,1,-5,4]
+Output: 6
+Explanation: The subarray [4,-1,2,1] has the largest sum 6.
+
+Example 2:
+Input: nums = [1]
+Output: 1
+
+Example 3:
+Input: nums = [5,4,-1,7,8]
+Output: 23""",
+        "starter_code": """function maxSubArray(nums) {
+    // Your code here
+    
+}""",
+        "sample_tests": [
+            {"input": "[[-2,1,-3,4,-1,2,1,-5,4]]", "expected": "6"},
+            {"input": "[[1]]", "expected": "1"},
+            {"input": "[[5,4,-1,7,8]]", "expected": "23"},
+        ],
+    },
+]
 
 
 def seed_questions(db: Session):
-    """Seed initial questions if table is empty."""
-    count = db.query(Question).count()
+    """Seed the database with sample questions"""
     
-    if count > 0:
-        print(f"✅ Database already has {count} questions, skipping seed")
+    # Check if questions already exist
+    existing = db.query(Question).count()
+    if existing > 0:
+        print(f"Database already has {existing} questions. Skipping seed.")
         return
     
-    questions = [
-        {
-            "title": "Two Sum",
-            "difficulty": "Easy",
-            "company_mode": "General",
-            "prompt": "Given an array of integers nums and an integer target, return indices of the two numbers that add up to target. You may assume each input has exactly one solution.",
-            "starter_code": "function solution(nums, target) {\n  // Your code here\n  return [];\n}",
-            "sample_tests": [
-                {"input": "[[2,7,11,15], 9]", "expected": "[0,1]"},
-                {"input": "[[3,2,4], 6]", "expected": "[1,2]"},
-                {"input": "[[3,3], 6]", "expected": "[0,1]"}
-            ]
-        },
-        {
-            "title": "Valid Parentheses",
-            "difficulty": "Easy",
-            "company_mode": "Google",
-            "prompt": "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid. An input string is valid if: open brackets are closed by the same type of brackets, and open brackets are closed in the correct order.",
-            "starter_code": "function solution(s) {\n  // Your code here\n  return false;\n}",
-            "sample_tests": [
-                {"input": "[\"()\"]", "expected": "true"},
-                {"input": "[\"()[]{}\"]", "expected": "true"},
-                {"input": "[\"(]\" ]", "expected": "false"},
-                {"input": "[\"([)]\"]", "expected": "false"}
-            ]
-        },
-        {
-            "title": "Merge Intervals",
-            "difficulty": "Medium",
-            "company_mode": "General",
-            "prompt": "Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.",
-            "starter_code": "function solution(intervals) {\n  // Your code here\n  return [];\n}",
-            "sample_tests": [
-                {"input": "[[[1,3],[2,6],[8,10],[15,18]]]", "expected": "[[1,6],[8,10],[15,18]]"},
-                {"input": "[[[1,4],[4,5]]]", "expected": "[[1,5]]"}
-            ]
-        },
-        {
-            "title": "Product of Array Except Self",
-            "difficulty": "Medium",
-            "company_mode": "Meta",
-            "prompt": "Given an integer array nums, return an array answer such that answer[i] is equal to the product of all elements of nums except nums[i]. You must write an algorithm that runs in O(n) time and without using the division operation.",
-            "starter_code": "function solution(nums) {\n  // Your code here\n  return [];\n}",
-            "sample_tests": [
-                {"input": "[[1,2,3,4]]", "expected": "[24,12,8,6]"},
-                {"input": "[[-1,1,0,-3,3]]", "expected": "[0,0,9,0,0]"}
-            ]
-        },
-        {
-            "title": "Median of Two Sorted Arrays",
-            "difficulty": "Hard",
-            "company_mode": "Google",
-            "prompt": "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).",
-            "starter_code": "function solution(nums1, nums2) {\n  // Your code here\n  return 0;\n}",
-            "sample_tests": [
-                {"input": "[[1,3], [2]]", "expected": "2"},
-                {"input": "[[1,2], [3,4]]", "expected": "2.5"}
-            ]
-        }
-    ]
+    print("Seeding database with sample questions...")
     
-    for q_data in questions:
-        question = Question(**q_data)
+    for q_data in SAMPLE_QUESTIONS:
+        question = Question(
+            id=uuid.uuid4(),
+            title=q_data["title"],
+            difficulty=q_data["difficulty"],
+            company_mode=q_data["company_mode"],
+            prompt=q_data["prompt"],
+            starter_code=q_data["starter_code"],
+            sample_tests=q_data["sample_tests"],
+        )
         db.add(question)
     
     db.commit()
-    print(f"✅ Seeded {len(questions)} questions")
+    print(f"✅ Added {len(SAMPLE_QUESTIONS)} questions to database")
 
 
-if __name__ == "__main__":
-    print("🌱 Initializing database...")
+def main():
+    """Main seed function"""
+    print("Initializing database...")
     init_db()
     
-    print("🌱 Seeding questions...")
     db = SessionLocal()
     try:
         seed_questions(db)
+        print("✅ Database seeding complete!")
     finally:
         db.close()
-    
-    print("✅ Seeding complete!")
+
+
+if __name__ == "__main__":
+    main()
