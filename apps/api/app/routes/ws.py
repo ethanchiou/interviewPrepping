@@ -9,6 +9,7 @@ from ..db import get_db
 from ..models import Question
 from ..services.llm_openrouter import openrouter
 from ..services.session_state import session_state
+from ..services.speech_analyzer import speech_analyzer  # NEW IMPORT
 from ..services.prompt_templates import (
     get_interviewer_system_prompt,
     get_coach_system_prompt,
@@ -146,6 +147,38 @@ async def handle_transcript_final(websocket: WebSocket, session_id: str, payload
         })
 
 
+async def handle_speech_analysis(websocket: WebSocket, session_id: str, payload: dict, db: Session):
+    """
+    NEW HANDLER: Handle REQUEST_SPEECH_ANALYSIS message.
+    Analyzes the user's speech for quality, clarity, filler words, etc.
+    """
+    transcript = payload.get("transcript", "")
+    context = payload.get("context", "")
+    
+    if not transcript or len(transcript.strip()) < 10:
+        await send_message(websocket, "SPEECH_ANALYSIS", session_id, {
+            "error": "Transcript too short for analysis"
+        })
+        return
+    
+    try:
+        # Analyze the speech using Gemini
+        analysis = await speech_analyzer.analyze_transcript(
+            transcript=transcript,
+            context=context
+        )
+        
+        # Send analysis back to client
+        await send_message(websocket, "SPEECH_ANALYSIS", session_id, analysis)
+        
+    except Exception as e:
+        print(f"Speech analysis error: {e}")
+        await send_message(websocket, "ERROR", session_id, {
+            "code": "SPEECH_ANALYSIS_FAILED",
+            "message": str(e)
+        })
+
+
 async def handle_state_change(websocket: WebSocket, session_id: str, payload: dict):
     """Handle STATE_CHANGE message."""
     new_state = payload.get("to", "INTRO")
@@ -195,6 +228,8 @@ async def websocket_endpoint(
             elif msg_type == "TRANSCRIPT_PARTIAL":
                 # Just acknowledge, no action needed
                 pass
+            elif msg_type == "REQUEST_SPEECH_ANALYSIS":  # NEW HANDLER
+                await handle_speech_analysis(websocket, session_id, msg_payload, db)
             elif msg_type == "STATE_CHANGE":
                 await handle_state_change(websocket, session_id, msg_payload)
             elif msg_type == "CODE_SNAPSHOT":
