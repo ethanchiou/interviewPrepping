@@ -212,17 +212,6 @@ export default function WebcamPanel({ onMetricsUpdate }: WebcamPanelProps) {
         onMetricsUpdate(newMetrics);
       }
 
-      // Draw small indicators
-      ctx.fillStyle = goodEyeContact ? '#00ff00' : '#ff0000';
-      ctx.fillRect(10, 10, 20, 20);
-      
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 14px Arial';
-      ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur = 4;
-      ctx.fillText(goodEyeContact ? '✓ Eye Contact' : '⚠ Look Here', 40, 25);
-      ctx.shadowBlur = 0;
-
     } else {
       const newMetrics: MediaPipeMetrics = {
         eyeContact: false,
@@ -241,7 +230,7 @@ export default function WebcamPanel({ onMetricsUpdate }: WebcamPanelProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -270,7 +259,7 @@ export default function WebcamPanel({ onMetricsUpdate }: WebcamPanelProps) {
           </>
         )}
 
-        {/* Metrics overlay */}
+        {/* Metrics overlay - MOVED TO BOTTOM */}
         {!isLoading && !error && (
           <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-70 text-white p-3 rounded-lg text-xs">
             <div className="grid grid-cols-3 gap-2">

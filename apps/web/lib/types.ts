@@ -70,6 +70,12 @@ export interface CodeSnapshotPayload {
 export interface RunResultPayload {
     passed: boolean;
     results: TestResult[];
+    executionTime?: number;
+    complexity?: {
+        time: string;
+        space: string;
+        explanation: string;
+    } | null;
 }
 
 export interface TestResult {
@@ -77,6 +83,7 @@ export interface TestResult {
     expected: string;
     actual: string;
     pass: boolean;
+    executionTime?: number;
 }
 
 // Server -> Client payloads

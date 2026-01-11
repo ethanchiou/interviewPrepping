@@ -3,143 +3,151 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export default function LandingForm() {
     const router = useRouter();
     const [companyMode, setCompanyMode] = useState("General");
     const [difficulty, setDifficulty] = useState("Medium");
-    const [dataStructure, setDataStructure] = useState("Random");
+    const [dataStructure, setDataStructure] = useState("Array");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
 
-    const handleStart = async () => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
         setLoading(true);
-        setError("");
 
         try {
-            // 1. Pick a question
-            const pickRes = await fetch(
-                `${API_URL}/questions/pick?company_mode=${companyMode}&difficulty=${difficulty}`
-            );
+            // Bypass session creation for now - go directly to interview
+            // Generate a demo session ID and token
+            const demoSessionId = `demo-${Date.now()}`;
+            const demoToken = `token-${Date.now()}`;
 
-            if (!pickRes.ok) {
-                throw new Error("Failed to fetch question");
-            }
-
-            const { question } = await pickRes.json();
-
-            // 2. Create session
-            const sessionRes = await fetch(`${API_URL}/sessions`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    question_id: question.id,
-                    company_mode: companyMode,
-                    difficulty,
-                }),
-            });
-
-            if (!sessionRes.ok) {
-                throw new Error("Failed to create session");
-            }
-
-            const { session_id, ws_token } = await sessionRes.json();
-
-            // 3. Navigate to interview room
-            router.push(`/interview?session_id=${session_id}&token=${ws_token}`);
-        } catch (err: any) {
-            setError(err.message || "Something went wrong");
+            // Navigate to interview page with demo credentials
+            router.push(`/interview?session_id=${demoSessionId}&token=${demoToken}&difficulty=${difficulty}&company_mode=${companyMode}&data_structure=${dataStructure}`);
+        } catch (error) {
+            console.error("Navigation error:", error);
+            alert("Failed to start interview. Please try again.");
+        } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl max-w-md w-full">
-                <h1 className="text-4xl font-bold text-center mb-2 text-gray-800 dark:text-white">
-                    Interview Simulator
-                </h1>
-                <p className="text-center text-gray-600 dark:text-gray-400 mb-8">
-                    Practice coding interviews with AI
-                </p>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                        Interview Simulator
+                    </h1>
+                    <p className="text-gray-600 dark:text-gray-400">
+                        Practice coding interviews with AI
+                    </p>
+                </div>
 
-                {error && (
-                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                        {error}
-                    </div>
-                )}
-
-                <div className="space-y-6">
-
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Company Mode */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label
+                            htmlFor="company"
+                            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+                        >
+                            Company Focus
+                        </label>
+                        <select
+                            id="company"
+                            value={companyMode}
+                            onChange={(e) => setCompanyMode(e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        >
+                            <option value="General">General</option>
+                            <option value="FAANG">FAANG</option>
+                            <option value="Startup">Startup</option>
+                        </select>
+                    </div>
+
+                    {/* Difficulty */}
+                    <div>
+                        <label
+                            htmlFor="difficulty"
+                            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+                        >
                             Difficulty
                         </label>
                         <select
+                            id="difficulty"
                             value={difficulty}
                             onChange={(e) => setDifficulty(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                            disabled={loading}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
-                            <option>Easy</option>
-                            <option>Medium</option>
-                            <option>Hard</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Company Mode
-                        </label>
-                        <select
-                            value={companyMode}
-                            onChange={(e) => setCompanyMode(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                            disabled={loading}
-                        >
-                            <option>General</option>
-                            <option>Meta</option>
-                            <option>Google</option>
-                            <option>Microsoft</option>
-                            <option>Apple</option>
-                            <option>tailscale</option>
-                            <option>Dyson</option>
-                            <option>Intuit</option>
-                            <option>Manulife</option>
-                            <option>Moorcheh.ai</option>
-
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
                         </select>
                     </div>
 
-                    
-
+                    {/* Data Structure */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Data Structure
+                        <label
+                            htmlFor="dataStructure"
+                            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+                        >
+                            Data Structure Focus
                         </label>
                         <select
+                            id="dataStructure"
                             value={dataStructure}
                             onChange={(e) => setDataStructure(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                            disabled={loading}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
-                            <option>Random</option>
-                            <option>HashMaps</option>
-                            <option>Linked Lists</option>
-                            <option>Stacks</option>
-                            <option>Two Pointers</option>
-                            <option>Graphs</option>
-                            
+                            <option value="Array">Array</option>
+                            <option value="String">String</option>
+                            <option value="LinkedList">Linked List</option>
+                            <option value="Tree">Tree</option>
+                            <option value="Graph">Graph</option>
+                            <option value="HashMap">Hash Map</option>
+                            <option value="Stack">Stack</option>
+                            <option value="Queue">Queue</option>
                         </select>
                     </div>
 
+                    {/* Submit Button */}
                     <button
-                        onClick={handleStart}
+                        type="submit"
                         disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
                     >
-                        {loading ? "Starting..." : "Start Interview"}
+                        {loading ? (
+                            <span className="flex items-center justify-center">
+                                <svg
+                                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                Starting Interview...
+                            </span>
+                        ) : (
+                            "Start Interview"
+                        )}
                     </button>
+                </form>
+
+                <div className="mt-6 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Demo Mode • Session management coming soon
+                    </p>
                 </div>
             </div>
         </div>

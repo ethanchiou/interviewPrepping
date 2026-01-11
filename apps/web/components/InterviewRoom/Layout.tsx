@@ -1,26 +1,18 @@
 "use client";
 
-import { ReactNode, useState } from "react";
-import InterviewerPanel from "./InterviewerPanel";
-import WebcamPanel from "./WebcamPanel";
-import EditorPanel from "./EditorPanel";
-import TranscriptPanel from "./TranscriptPanel";
 import {
+    Question,
     InterviewerMessage,
     CoachNudge,
     TranscriptEntry,
-    Question,
     RunResultPayload,
 } from "@/lib/types";
-
-// MediaPipe metrics interface
-interface MediaPipeMetrics {
-    eyeContact: boolean;
-    leftEyeOpen: boolean;
-    rightEyeOpen: boolean;
-    headTiltAngle: number;
-    faceDetected: boolean;
-}
+import EditorPanel from "./EditorPanel";
+import InterviewerPanel from "./InterviewerPanel";
+import CoachPanel from "./CoachPanel";
+import TranscriptPanel from "./TranscriptPanel";
+import WebcamPanel from "./WebcamPanel";
+import Timer from "./Timer";
 
 interface LayoutProps {
     question: Question;
@@ -32,7 +24,7 @@ interface LayoutProps {
     startTime: number;
     onCodeChange: (code: string) => void;
     onRunResult: (result: RunResultPayload) => void;
-    sttFallback?: ReactNode;
+    sttFallback?: React.ReactNode;
 }
 
 export default function Layout({
@@ -47,40 +39,39 @@ export default function Layout({
     onRunResult,
     sttFallback,
 }: LayoutProps) {
-    const divStyle = {
-        borderRadius: "30px",
-        overflow: "hidden",
-        margin: "3px",
-    };
-
-    // MediaPipe state
-    const [mediapipeMetrics, setMediapipeMetrics] = useState<MediaPipeMetrics | null>(null);
-
     return (
-        <div className="h-screen flex flex-col" style={divStyle}>
-            {/* Main content area */}
-            <div className="flex-1 flex overflow-hidden p-2" style={divStyle}>
-                {/* Left Column (50%) */}
-                <div className="w-2/5 h-full flex flex-col border-r border-gray-200 dark:border-gray-700" style={divStyle}>
-                    {/* Top-Left: Webcam */}
-                    <div className="flex-1 min-h-0 border-t border-gray-200 dark:border-gray-700" style={divStyle}>
-                        <WebcamPanel onMetricsUpdate={setMediapipeMetrics} />
+        <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
+            {/* Header */}
+            <div className="flex-none bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-xl font-bold text-gray-800 dark:text-white">
+                        Interview Simulator
+                    </h1>
+                    <Timer startTime={startTime} />
+                </div>
+            </div>
+
+            {/* Main Content Area - Fixed Height, No Overall Scroll */}
+            <div className="flex-1 flex gap-6 p-6 min-h-0">
+                {/* Left Column - Webcam and Interviewer */}
+                <div className="w-[420px] flex flex-col gap-6 flex-none">
+                    {/* Webcam - Fixed Height */}
+                    <div className="h-72 flex-none">
+                        <WebcamPanel />
                     </div>
 
-                    {/* Bottom-Left: Interviewer */}
-                    <div className="flex-1 min-h-0" style={divStyle}>
-                        <InterviewerPanel
-                            messages={interviewerMessages}
-                            startTime={startTime}
-                            metrics={mediapipeMetrics}
-                        />
+                    {/* Interviewer Panel - Flexible, Scrollable */}
+                    <div className="flex-1 min-h-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col">
+                        <div className="flex-1 min-h-0 overflow-y-auto">
+                            <InterviewerPanel messages={interviewerMessages} startTime={startTime} />
+                        </div>
                     </div>
                 </div>
 
-                {/* Right Column (50%) */}
-                <div className="w-3/5 h-full flex flex-col" style={divStyle}>
-                    {/* Top-Right: Editor (66%) */}
-                    <div className="flex-[2] min-h-0" style={divStyle}>
+                {/* Right Column - Code Editor and Transcript */}
+                <div className="flex-1 min-w-0 flex flex-col gap-6">
+                    {/* Code Editor */}
+                    <div className="flex-1 min-h-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
                         <EditorPanel
                             question={question}
                             code={code}
@@ -89,22 +80,23 @@ export default function Layout({
                         />
                     </div>
 
-                    {/* Bottom-Right: Transcript (33%) */}
-                    <div className="flex-[1] min-h-0 border-t border-gray-200 dark:border-gray-700" style={divStyle}>
-                        <TranscriptPanel
-                            entries={transcriptEntries}
-                            currentPartial={currentPartial}
-                        />
+                    {/* Transcript Panel - Below Editor */}
+                    <div className="h-48 flex-none bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col">
+                        <div className="flex-none px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+                                Transcript
+                            </h2>
+                        </div>
+                        <div className="flex-1 min-h-0 overflow-y-auto">
+                            <TranscriptPanel
+                                entries={transcriptEntries}
+                                currentPartial={currentPartial}
+                                fallback={sttFallback}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
-
-            {/* STT fallback (if provided) */}
-            {sttFallback && (
-                <div className="bg-yellow-100 dark:bg-yellow-900 p-3 border-t border-yellow-300 dark:border-yellow-700" style={divStyle}>
-                    {sttFallback}
-                </div>
-            )}
         </div>
     );
 }
