@@ -20,7 +20,7 @@ export default function LandingForm() {
         try {
             // 1. Pick a question
             const pickRes = await fetch(
-                `${API_URL}/questions/pick?company_mode=${companyMode}&difficulty=${difficulty}`
+                `${API_URL}/questions/pick?company_mode=${companyMode}&difficulty=${difficulty}&data_structure=${dataStructure}`
             );
 
             if (!pickRes.ok) {
@@ -37,6 +37,7 @@ export default function LandingForm() {
                     question_id: question.id,
                     company_mode: companyMode,
                     difficulty,
+                    data_structure: dataStructure,
                 }),
             });
 

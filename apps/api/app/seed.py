@@ -1,16 +1,15 @@
 """Seed the database with sample questions."""
 import sys
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session as DBSession
+from sqlalchemy import text
 from app.db import SessionLocal, engine
-from app.models import Base, Question
+from app.models import Base, Question, Session as SessionModel
 
 
-def seed_questions(db: Session):
+def seed_questions(db: DBSession):
     """Add sample interview questions to the database."""
     
-    # Clear existing questions (optional - remove if you want to keep existing data)
-    db.query(Question).delete()
-    db.commit()
+    # Tables are already dropped and recreated in main(), so no need to delete here
     
     questions = [
         # ========== GENERAL - EASY ==========
@@ -47,7 +46,7 @@ Example:
 Input: s = "A man, a plan, a canal: Panama"
 Output: true
 Explanation: "amanaplanacanalpanama" is a palindrome.""",
-            "starter_code": "function isPalindrome(s) {\n  // Your code here\n}",
+            "starter_code": "class Solution:\n    def isPalindrome(self, s: str) -> bool:\n        # Your code here\n        pass",
             "sample_tests": [
                 {"input": '"A man, a plan, a canal: Panama"', "expected": "true"},
                 {"input": '"race a car"', "expected": "false"},
@@ -127,7 +126,7 @@ Return the maximum amount of water a container can store.
 Example:
 Input: height = [1,8,6,2,5,4,8,3,7]
 Output: 49""",
-            "starter_code": "function maxArea(height) {\n  // Your code here\n}",
+            "starter_code": "def solution(height):\n    # Your code here\n    pass",
             "sample_tests": [
                 {"input": "[1,8,6,2,5,4,8,3,7]", "expected": "49"},
                 {"input": "[1,1]", "expected": "1"}
@@ -221,7 +220,7 @@ The functions get and put must each run in O(1) average time complexity.""",
 Example:
 Input: height = [0,1,0,2,1,0,1,3,2,1,2,1]
 Output: 6""",
-            "starter_code": "function trap(height) {\n  // Your code here\n}",
+            "starter_code": "def solution(height):\n    # Your code here\n    pass",
             "sample_tests": [
                 {"input": "[0,1,0,2,1,0,1,3,2,1,2,1]", "expected": "6"},
                 {"input": "[4,2,0,3,2,5]", "expected": "9"}
@@ -369,7 +368,7 @@ Notice that the solution set must not contain duplicate triplets.
 Example:
 Input: nums = [-1,0,1,2,-1,-4]
 Output: [[-1,-1,2],[-1,0,1]]""",
-            "starter_code": "function threeSum(nums) {\n  // Your code here\n}",
+            "starter_code": "def solution(nums):\n    # Your code here\n    pass",
             "sample_tests": [
                 {"input": "[-1,0,1,2,-1,-4]", "expected": "[[-1,-1,2],[-1,0,1]]"},
                 {"input": "[0,1,1]", "expected": "[]"},
@@ -437,7 +436,9 @@ def main():
     """Run the seed script."""
     print("Starting database seed...")
     
-    # Create tables
+    # Drop all tables and recreate them to ensure schema matches models
+    # This also handles the foreign key constraint issue
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     
     # Get database session

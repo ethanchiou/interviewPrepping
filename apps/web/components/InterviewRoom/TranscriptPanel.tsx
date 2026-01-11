@@ -48,9 +48,9 @@ export default function TranscriptPanel({
                             onRequestAnalysis();
                             setShowAnalysis(true);
                         }}
-                        className="text-xs px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
+                        className="text-s px-5 py-2 mr-3 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
                     >
-                        📊 Analyze Speech
+                        Analyze
                     </button>
                 )}
             </div>

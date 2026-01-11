@@ -28,10 +28,10 @@ export default function EditorPanel({
                     </h2>
                     <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${question.difficulty === "Easy"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                : question.difficulty === "Medium"
-                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : question.difficulty === "Medium"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                             }`}
                     >
                         {question.difficulty}
@@ -46,7 +46,7 @@ export default function EditorPanel({
             <div className="flex-1 min-h-0">
                 <Editor
                     height="100%"
-                    defaultLanguage="javascript"
+                    defaultLanguage="python"
                     value={code}
                     onChange={(value) => onCodeChange(value || "")}
                     theme="vs-dark"
