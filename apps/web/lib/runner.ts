@@ -1,71 +1,132 @@
 /**
- * Code runner for executing JavaScript code with test cases
+ * Code runner utility that uses Web Worker
  */
 
-import { SampleTest, RunResultPayload, TestResult } from "./types";
+import { SampleTest, RunResultPayload } from "./types";
 
 export async function runTests(
     code: string,
-    tests: SampleTest[]
+    tests: SampleTest[],
+    timeout: number = 800
 ): Promise<RunResultPayload> {
-    const results: TestResult[] = [];
-    let allPassed = true;
-
-    for (const test of tests) {
-        try {
-            const result = await runSingleTest(code, test);
-            results.push(result);
-            if (!result.pass) {
-                allPassed = false;
-            }
-        } catch (error: any) {
-            results.push({
-                input: test.input,
-                expected: test.expected,
-                actual: `Error: ${error.message}`,
-                pass: false,
-            });
-            allPassed = false;
-        }
-    }
-
-    return {
-        passed: allPassed,
-        results,
-    };
-}
-
-async function runSingleTest(
-    code: string,
-    test: SampleTest
-): Promise<TestResult> {
-    // Create a safe execution environment
-    const wrappedCode = `
-        ${code}
-        
-        // Execute the solution function
-        const input = ${test.input};
-        const result = solution(input);
-        return JSON.stringify(result);
+    return new Promise((resolve, reject) => {
+        // Create worker from runnerWorker.ts
+        const workerCode = `
+      ${getWorkerCode()}
     `;
 
-    try {
-        // Use Function constructor to execute in isolated scope
-        const func = new Function(wrappedCode);
-        const actualRaw = func();
-        const actual = JSON.parse(actualRaw);
-        const expected = JSON.parse(test.expected);
+        const blob = new Blob([workerCode], { type: "application/javascript" });
+        const workerUrl = URL.createObjectURL(blob);
+        const worker = new Worker(workerUrl);
 
-        // Deep equality check
-        const pass = JSON.stringify(actual) === JSON.stringify(expected);
+        // Set timeout to kill worker
+        const timeoutId = setTimeout(() => {
+            worker.terminate();
+            URL.revokeObjectURL(workerUrl);
+            reject(new Error("Code execution timeout"));
+        }, timeout + 100); // Add buffer to worker timeout
 
-        return {
-            input: test.input,
-            expected: test.expected,
-            actual: JSON.stringify(actual),
-            pass,
+        worker.onmessage = (event) => {
+            clearTimeout(timeoutId);
+            worker.terminate();
+            URL.revokeObjectURL(workerUrl);
+
+            if (event.data.error) {
+                reject(new Error(event.data.message || event.data.error));
+            } else {
+                resolve({
+                    passed: event.data.passed,
+                    results: event.data.results,
+                });
+            }
         };
-    } catch (error: any) {
-        throw new Error(error.message || "Execution failed");
-    }
+
+        worker.onerror = (error) => {
+            clearTimeout(timeoutId);
+            worker.terminate();
+            URL.revokeObjectURL(workerUrl);
+            reject(error);
+        };
+
+        // Send test execution command
+        worker.postMessage({
+            type: "RUN_TESTS",
+            code,
+            tests,
+            timeout,
+        });
+    });
+}
+
+// Inline worker code (to avoid import issues with Next.js)
+function getWorkerCode(): string {
+    return `
+    self.onmessage = (event) => {
+      const { type, code, tests, timeout } = event.data;
+
+      if (type !== "RUN_TESTS") {
+        return;
+      }
+
+      const startTime = Date.now();
+      const results = [];
+
+      try {
+        const wrappedCode = \`
+          \${code}
+          
+          if (typeof solution !== 'function') {
+            throw new Error('You must define a function called "solution"');
+          }
+          solution;
+        \`;
+
+        const solutionFn = eval('(' + wrappedCode + ')');
+
+        for (const test of tests) {
+          if (Date.now() - startTime > timeout) {
+            self.postMessage({
+              error: "TIMEOUT",
+              message: \`Execution exceeded \${timeout}ms\`,
+            });
+            return;
+          }
+
+          try {
+            const args = JSON.parse(test.input);
+            const argsArray = Array.isArray(args) ? args : [args];
+            const actual = solutionFn(...argsArray);
+            const actualStr = JSON.stringify(actual);
+            const expectedObj = JSON.parse(test.expected);
+            const expectedStr = JSON.stringify(expectedObj);
+
+            results.push({
+              input: test.input,
+              expected: test.expected,
+              actual: actualStr,
+              pass: actualStr === expectedStr,
+            });
+          } catch (error) {
+            results.push({
+              input: test.input,
+              expected: test.expected,
+              actual: \`Error: \${error.message}\`,
+              pass: false,
+            });
+          }
+        }
+
+        const allPassed = results.every((r) => r.pass);
+        self.postMessage({
+          passed: allPassed,
+          results,
+        });
+      } catch (error) {
+        self.postMessage({
+          error: "RUNTIME_ERROR",
+          message: error.message,
+        });
+      }
+    };
+  `;
 }

@@ -9,6 +9,7 @@ export default function LandingForm() {
     const router = useRouter();
     const [companyMode, setCompanyMode] = useState("General");
     const [difficulty, setDifficulty] = useState("Medium");
+    const [dataStructure, setDataStructure] = useState("Random");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -70,21 +71,6 @@ export default function LandingForm() {
                 )}
 
                 <div className="space-y-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Company Mode
-                        </label>
-                        <select
-                            value={companyMode}
-                            onChange={(e) => setCompanyMode(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                            disabled={loading}
-                        >
-                            <option>General</option>
-                            <option>Google</option>
-                            <option>Meta</option>
-                        </select>
-                    </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -99,6 +85,51 @@ export default function LandingForm() {
                             <option>Easy</option>
                             <option>Medium</option>
                             <option>Hard</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Company Mode
+                        </label>
+                        <select
+                            value={companyMode}
+                            onChange={(e) => setCompanyMode(e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                            disabled={loading}
+                        >
+                            <option>General</option>
+                            <option>Meta</option>
+                            <option>Google</option>
+                            <option>Microsoft</option>
+                            <option>Apple</option>
+                            <option>tailscale</option>
+                            <option>Dyson</option>
+                            <option>Intuit</option>
+                            <option>Manulife</option>
+                            <option>Moorcheh.ai</option>
+
+                        </select>
+                    </div>
+
+                    
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Data Structure
+                        </label>
+                        <select
+                            value={dataStructure}
+                            onChange={(e) => setDataStructure(e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                            disabled={loading}
+                        >
+                            <option>Random</option>
+                            <option>HashMaps</option>
+                            <option>Linked Lists</option>
+                            <option>Stacks</option>
+                            <option>Two Pointers</option>
+                            <option>Graphs</option>
+                            
                         </select>
                     </div>
 

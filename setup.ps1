@@ -29,7 +29,14 @@ if (-not (Test-Path "venv")) {
 
 if (-not (Test-Path ".env")) {
     Write-Host "   Creating .env file..."
-    Copy-Item ".env.example" ".env"
+    $envContent = @"
+OPENROUTER_API_KEY=your_api_key_here
+OPENROUTER_MODEL=google/gemini-2.0-flash-exp:free
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/interview_sim
+REDIS_URL=redis://localhost:6379/0
+CORS_ORIGINS=http://localhost:3000
+"@
+    Set-Content -Path ".env" -Value $envContent
     Write-Host "⚠️  Please edit apps\api\.env to add your OPENROUTER_API_KEY" -ForegroundColor Red
 }
 
@@ -47,7 +54,11 @@ if (-not (Test-Path "node_modules")) {
 
 if (-not (Test-Path ".env.local")) {
     Write-Host "   Creating .env.local file..."
-    Copy-Item ".env.local.example" ".env.local"
+    $webEnvContent = @"
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws
+"@
+    Set-Content -Path ".env.local" -Value $webEnvContent
 }
 
 # 4. Run Application
