@@ -19,7 +19,7 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.cors_origins.split(",")]
     
     class Config:
-        env_file = ".env"
+        env_file = ".env.local"
         case_sensitive = False
         extra = "ignore"
 
