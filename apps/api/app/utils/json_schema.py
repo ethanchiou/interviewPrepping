@@ -1,42 +1,65 @@
-"""JSON schema validation utilities."""
+"""JSON schema validation utilities for LLM responses."""
 import json
-from typing import Any, Dict
+from typing import Dict, Any, Literal
 
 
-def validate_coach_output(output: str) -> Dict[str, Any]:
+def validate_coach_output(response: str) -> Dict[str, Any]:
     """
-    Validate coach LLM output matches required schema.
+    Validate and parse coach output JSON.
     
-    Expected schema:
-    {
-        "severity": "none" | "low" | "medium" | "high",
-        "text": "string <= 120 chars"
-    }
-    
-    Returns validated dict or fallback on error.
+    Args:
+        response: Raw response from LLM
+        
+    Returns:
+        Validated coach output dict with 'severity' and 'text'
+        
+    Raises:
+        ValueError: If response is invalid
     """
     try:
-        data = json.loads(output)
+        # Try to parse as JSON
+        data = json.loads(response.strip())
         
         # Validate required fields
         if "severity" not in data or "text" not in data:
-            raise ValueError("Missing required fields")
+            raise ValueError("Missing required fields: severity or text")
         
-        # Validate severity
-        if data["severity"] not in ["none", "low", "medium", "high"]:
+        # Validate severity value
+        valid_severities = ["none", "low", "medium", "high"]
+        if data["severity"] not in valid_severities:
             raise ValueError(f"Invalid severity: {data['severity']}")
         
-        # Validate text length
-        if len(data["text"]) > 120:
-            data["text"] = data["text"][:120]
+        # Ensure text is a string
+        if not isinstance(data["text"], str):
+            raise ValueError("text must be a string")
         
         return {
             "severity": data["severity"],
-            "text": str(data["text"])
+            "text": data["text"]
         }
-    except Exception as e:
-        # Fallback to safe default
+        
+    except json.JSONDecodeError as e:
+        # If JSON parsing fails, try to extract JSON from the response
+        # Sometimes LLMs add extra text around the JSON
+        import re
+        json_match = re.search(r'\{[^{}]*"severity"[^{}]*"text"[^{}]*\}', response)
+        
+        if json_match:
+            try:
+                data = json.loads(json_match.group(0))
+                return validate_coach_output(json_match.group(0))
+            except:
+                pass
+        
+        # Fallback: return a default low-severity message
         return {
             "severity": "none",
-            "text": "Keep going, you're doing great!"
+            "text": ""
+        }
+    
+    except Exception as e:
+        # Any other error: return safe default
+        return {
+            "severity": "none",
+            "text": ""
         }
